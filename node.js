@@ -1,0 +1,1 @@
+//https://models.readyplayer.me/66b12d6df405cc289676a084.glb
