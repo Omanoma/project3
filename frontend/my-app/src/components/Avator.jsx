@@ -4,29 +4,59 @@ Command: npx gltfjsx@6.5.0 public/AvatorModel/Model.glb -o src/components/Avator
 https://models.readyplayer.me/66c4d855ee652b88d7de32ca.glb
 */
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo,useCallback } from "react";
 import { useGraph, useFrame } from "@react-three/fiber";
+import {useControls} from "leva"
 import { useGLTF, useFBX, useAnimations } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
 
 export function Model(props) {
-  const group = useRef();
-  const { scene } = useGLTF("/AvatorModel/Model.glb");
-  const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene]);
-  const { nodes, materials } = useGraph(clone);
+   // Manage controls for audio and script
+   const { playAudio, script } = useControls({
+    playAudio: false,
+    script: {
+      value: 'welcome',
+      options: ['welcome', 'DuborSub'],
+    },
+  });
 
-  const [animation, setAnimation] = useState("Dancing");
-  const { animations} = useFBX("/AvatorModel/F_Dances_005.fbx");
-  animations[0].name = "Dancing";
-  animations[0].tracks[0].values.fill(0)
-  console.log(animations[0].tracks[0].values)
-  const { actions } = useAnimations([animations[0]], group);
+  // Memoize audio to prevent reinitialization
+  const audio = useMemo(() => new Audio(`/Audio/${script}.ogg`), [script]);
+
   useEffect(() => {
-    actions[animation].reset().fadeIn(0.5).play();
-    return () => {
-      actions[animation].reset().fadeOut(0.5);
-    };
-  }, [animation]);
+    if (playAudio) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }, [playAudio, script, audio]);
+
+  const group = useRef();
+  const { nodes, materials } =  useGLTF('/AvatorModel/Model.glb');
+
+  const [animation, setAnimation] = useState('Idle');
+  const { animations: animationIdle } = useFBX('/AvatorModel/Idle (3).fbx');
+  animationIdle[0].name = 'Idle';
+
+  const { actions } = useAnimations(animationIdle, group);
+
+  useEffect(() => {
+    if (actions[animation]) {
+      const action = actions[animation];
+      action.reset().fadeIn(0.5).play();
+
+      return () => {
+        action.reset().fadeOut(0.5);
+      };
+    }
+  }, [animation, actions]);
+
+  
+  useCallback((event) => {
+    event.stopPropagation(); 
+    console.log('Central panel clicked');
+  }, []);
+  
 
   return (
     <group {...props} dispose={null} ref={group}>
