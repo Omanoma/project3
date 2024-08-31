@@ -8,7 +8,7 @@ export default function App() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 0, 16], fov: 62 }}
+      camera={{ position: [0, 0, 16], fov: 12 }}
       style={{
         width: "100vw",
         height: "100vh",
